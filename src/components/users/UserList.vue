@@ -26,9 +26,12 @@
 </template>
 
 <script>
-import { ref, computed, watch } from "vue";
+import { toRefs } from "vue";
 
 import UserItem from "./UserItem.vue";
+
+import useSearch from "../../hooks/search.js";
+import useSort from "../../hooks/sort.js";
 
 export default {
   components: {
@@ -37,57 +40,17 @@ export default {
   props: ["users"],
   emits: ["list-projects"],
   setup(props) {
-    // data
-    const enteredSearchTerm = ref("");
-    const activeSearchTerm = ref("");
+    const { users } = toRefs(props);
 
-    const availableUsers = computed(() => {
-      let users = [];
-      if (activeSearchTerm.value) {
-        users = props.users.filter((usr) =>
-          usr.fullName.toLowerCase().includes(activeSearchTerm.value.toLowerCase())
-        );
-      } else if (props.users) {
-        users = props.users;
-      }
-      return users;
-    });
+    const { enteredSearchTerm, availableItems, updateSearch } = useSearch(
+      users,
+      "fullName"
+    );
 
-    function updateSearch(val) {
-      enteredSearchTerm.value = val;
-    }
-
-    watch(enteredSearchTerm, (newVal) => {
-      setTimeout(() => {
-        if (newVal === enteredSearchTerm.value) {
-          activeSearchTerm.value = newVal;
-        }
-      }, 300);
-    });
-
-    const sorting = ref(null);
-
-    // computed properties
-    const displayedUsers = computed(() => {
-      if (!sorting.value) {
-        return availableUsers.value;
-      }
-      return availableUsers.value.slice().sort((u1, u2) => {
-        if (sorting.value === "asc" && u1.fullName > u2.fullName) {
-          return 1;
-        } else if (sorting.value === "asc") {
-          return -1;
-        } else if (sorting.value === "desc" && u1.fullName > u2.fullName) {
-          return -1;
-        } else {
-          return 1;
-        }
-      });
-    });
-
-    function sort(mode) {
-      sorting.value = mode;
-    }
+    const { displayedUsers, sort, sorting } = useSort(
+      availableItems,
+      "fullName"
+    );
 
     return {
       enteredSearchTerm,
@@ -97,59 +60,6 @@ export default {
       sort,
     };
   },
-  // data() {
-  //   return {
-  //     enteredSearchTerm: "",
-  //     activeSearchTerm: "",
-  //     sorting: null,
-  //   };
-  // },
-  // computed: {
-  //   availableUsers() {
-  //     let users = [];
-  //     if (this.activeSearchTerm) {
-  //       users = this.users.filter((usr) =>
-  //         usr.fullName.includes(this.activeSearchTerm)
-  //       );
-  //     } else if (this.users) {
-  //       users = this.users;
-  //     }
-  //     return users;
-  //   },
-  //   displayedUsers() {
-  //     if (!this.sorting) {
-  //       return this.availableUsers;
-  //     }
-  //     return this.availableUsers.slice().sort((u1, u2) => {
-  //       if (this.sorting === "asc" && u1.fullName > u2.fullName) {
-  //         return 1;
-  //       } else if (this.sorting === "asc") {
-  //         return -1;
-  //       } else if (this.sorting === "desc" && u1.fullName > u2.fullName) {
-  //         return -1;
-  //       } else {
-  //         return 1;
-  //       }
-  //     });
-  //   },
-  // },
-  // methods: {
-  //   updateSearch(val) {
-  //     this.enteredSearchTerm = val;
-  //   },
-  //   sort(mode) {
-  //     this.sorting = mode;
-  //   },
-  // },
-  // watch: {
-  //   enteredSearchTerm(val) {
-  //     setTimeout(() => {
-  //       if (val === this.enteredSearchTerm) {
-  //         this.activeSearchTerm = val;
-  //       }
-  //     }, 300);
-  //   },
-  // },
 };
 </script>
 

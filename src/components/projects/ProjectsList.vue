@@ -21,8 +21,9 @@
 </template>
 
 <script>
-import { ref, computed, watch, toRefs } from "vue";
+import { computed, watch, toRefs } from "vue";
 import ProjectItem from "./ProjectItem.vue";
+import useSearch from "../../hooks/search.js";
 
 export default {
   components: {
@@ -30,83 +31,30 @@ export default {
   },
   props: ["user"],
   setup(props) {
-    const enteredSearchTerm = ref("");
-    const activeSearchTerm = ref("");
+    const { user } = toRefs(props);
 
-    const availableProjects = computed(() => {
-      if (activeSearchTerm.value) {
-        return props.user.projects.filter((prj) =>
-          prj.title.includes(activeSearchTerm.value)
-        );
-      }
-      return props.user.projects;
-    });
+    const projects = computed(() => (user.value ? user.value.projects : []));
+
+    const { enteredSearchTerm, availableItems, updateSearch } = useSearch(
+      projects,
+      "title"
+    );
 
     const hasProjects = computed(() => {
-      return props.user.projects && availableProjects.value.length > 0;
+      return user.value.projects && availableItems.value.length > 0;
     });
-
-    function updateSearch(val) {
-      enteredSearchTerm.value = val;
-    }
-
-    watch(enteredSearchTerm, (newVal) => {
-      setTimeout(() => {
-        if (newVal === enteredSearchTerm.value) {
-          activeSearchTerm.value = newVal;
-        }
-      }, 300);
-    });
-
-    const { user } = toRefs(props)
 
     watch(user, () => {
-      enteredSearchTerm.value = "";
+      updateSearch("");
     });
 
     return {
       enteredSearchTerm,
-      availableProjects,
+      availableProjects: availableItems,
       hasProjects,
       updateSearch,
     };
   },
-  // data() {
-  //   return {
-  //     enteredSearchTerm: '',
-  //     activeSearchTerm: '',
-  //   };
-  // },
-  // computed: {
-  //   hasProjects() {
-  //     return this.user.projects && this.availableProjects.length > 0;
-  //   },
-  //   availableProjects() {
-  //     if (this.activeSearchTerm) {
-  //       return this.user.projects.filter((prj) =>
-  //         prj.title.includes(this.activeSearchTerm)
-  //       );
-  //     }
-  //     return this.user.projects;
-  //   },
-  // },
-  // methods: {
-  //   updateSearch(val) {
-  //     this.enteredSearchTerm = val;
-  //   },
-  // },
-  // watch: {
-  //   enteredSearchTerm(val) {
-  //     setTimeout(() => {
-  //       if (val === this.enteredSearchTerm) {
-  //         this.activeSearchTerm = val;
-  //       }
-  //     }, 300);
-  //   },
-  //   user() {
-  //     this.enteredSearchTerm = "";
-  //   },
-  // },
 };
 </script>
 
